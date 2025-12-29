@@ -5,8 +5,8 @@ services:
     plan: starter
     region: oregon
     branch: master
-    buildCommand: cd ecommerce-backend && npm install  # Ensure npm install runs in /ecommerce-backend
-    startCommand: cd ecommerce-backend && npm run start  # Ensure npm run start runs in /ecommerce-backend
+    buildCommand: cd ecommerce-backend && npm install  # Install dependencies inside /ecommerce-backend
+    startCommand: cd ecommerce-backend && npm run start  # Start the app from /ecommerce-backend
     envVars:
       - key: NODE_ENV
         value: production
