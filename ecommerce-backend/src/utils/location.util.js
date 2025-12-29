@@ -1,4 +1,13 @@
-import indianPincodes from './pincode.json' assert { type: 'json' };
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const indianPincodes = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'pincode.json'), 'utf8')
+);
 
 const COUNTRY = {
   code: 'IN',
