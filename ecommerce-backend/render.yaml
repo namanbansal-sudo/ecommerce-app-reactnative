@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: ecommerce-backend
+    env: node
+    plan: starter
+    region: oregon
+    branch: main
+    buildCommand: npm install  # Or npm run build if applicable
+    startCommand: npm run start
+    envVars:
+      # Production-related environment variables
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: "<REPLACE_WITH_RENDER_SECRET>"
+      - key: JWT_SECRET
+        value: "<REPLACE_WITH_RENDER_SECRET>"
+      - key: JWT_REFRESH_SECRET
+        value: "<REPLACE_WITH_RENDER_SECRET>"
+      - key: CLOUDINARY_CLOUD_NAME
+        value: "<REPLACE_WITH_RENDER_SECRET>"
+      - key: CLOUDINARY_API_KEY
+        value: "<REPLACE_WITH_RENDER_SECRET>"
+      - key: CLOUDINARY_API_SECRET
+        value: "<REPLACE_WITH_RENDER_SECRET>"
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: BASE_URL
+        value: "<SET_YOUR_FRONTEND_HOST>"
+      - key: EMAIL_USER
+        value: "<REPLACE_WITH_RENDER_SECRET>"
+      - key: EMAIL_PASS
+        value: "<REPLACE_WITH_RENDER_SECRET>"
+      - key: STRIPE_SECRET_KEY
+        value: "<REPLACE_WITH_RENDER_SECRET>"
