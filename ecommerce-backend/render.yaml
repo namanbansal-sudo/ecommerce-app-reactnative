@@ -2,33 +2,47 @@ services:
   - type: web
     name: ecommerce-backend
     env: node
-    plan: starter
-    region: oregon
-    branch: master
-    buildCommand: cd ecommerce-backend && npm install  # Change directory to ecommerce-backend and run npm install
-    startCommand: cd ecommerce-backend && npm run start  # Change directory to ecommerce-backend and run npm start
+    buildCommand: 'npm install'
+    startCommand: 'npm run start'
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
-        value: "<REPLACE_WITH_RENDER_SECRET>"
-      - key: JWT_SECRET
-        value: "<REPLACE_WITH_RENDER_SECRET>"
-      - key: JWT_REFRESH_SECRET
-        value: "<REPLACE_WITH_RENDER_SECRET>"
-      - key: CLOUDINARY_CLOUD_NAME
-        value: "<REPLACE_WITH_RENDER_SECRET>"
-      - key: CLOUDINARY_API_KEY
-        value: "<REPLACE_WITH_RENDER_SECRET>"
-      - key: CLOUDINARY_API_SECRET
-        value: "<REPLACE_WITH_RENDER_SECRET>"
-      - key: CORS_ORIGIN
-        value: "*"
-      - key: BASE_URL
-        value: "<SET_YOUR_FRONTEND_HOST>"
-      - key: EMAIL_USER
-        value: "<REPLACE_WITH_RENDER_SECRET>"
-      - key: EMAIL_PASS
-        value: "<REPLACE_WITH_RENDER_SECRET>"
-      - key: STRIPE_SECRET_KEY
-        value: "<REPLACE_WITH_RENDER_SECRET>"
+    plan: free
+    healthCheckPath: /health
+    branch: master
+    directory: ecommerce-backend
+
+# services:
+#   - type: web
+#     name: ecommerce-backend
+#     env: node
+#     plan: starter
+#     region: oregon
+#     branch: master
+#     buildCommand: cd ecommerce-backend && npm install  # Change directory to ecommerce-backend and run npm install
+#     startCommand: cd ecommerce-backend && npm run start  # Change directory to ecommerce-backend and run npm start
+#     envVars:
+#       - key: NODE_ENV
+#         value: production
+#       - key: DATABASE_URL
+#         value: "<REPLACE_WITH_RENDER_SECRET>"
+#       - key: JWT_SECRET
+#         value: "<REPLACE_WITH_RENDER_SECRET>"
+#       - key: JWT_REFRESH_SECRET
+#         value: "<REPLACE_WITH_RENDER_SECRET>"
+#       - key: CLOUDINARY_CLOUD_NAME
+#         value: "<REPLACE_WITH_RENDER_SECRET>"
+#       - key: CLOUDINARY_API_KEY
+#         value: "<REPLACE_WITH_RENDER_SECRET>"
+#       - key: CLOUDINARY_API_SECRET
+#         value: "<REPLACE_WITH_RENDER_SECRET>"
+#       - key: CORS_ORIGIN
+#         value: "*"
+#       - key: BASE_URL
+#         value: "<SET_YOUR_FRONTEND_HOST>"
+#       - key: EMAIL_USER
+#         value: "<REPLACE_WITH_RENDER_SECRET>"
+#       - key: EMAIL_PASS
+#         value: "<REPLACE_WITH_RENDER_SECRET>"
+#       - key: STRIPE_SECRET_KEY
+#         value: "<REPLACE_WITH_RENDER_SECRET>"
