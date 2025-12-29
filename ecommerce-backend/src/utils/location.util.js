@@ -1,4 +1,4 @@
-const indianPincodes = require('./pincode.json');
+import indianPincodes from './pincode.json' assert { type: 'json' };
 
 const COUNTRY = {
   code: 'IN',
