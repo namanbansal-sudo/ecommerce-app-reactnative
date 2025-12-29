@@ -5,10 +5,9 @@ services:
     plan: starter
     region: oregon
     branch: master
-    buildCommand: npm install  # Or npm run build if applicable
-    startCommand: npm run start
+    buildCommand: cd ecommerce-backend && npm install  # Go to the correct directory before running npm install
+    startCommand: cd ecommerce-backend && npm run start  # Similarly, start the backend from the correct directory
     envVars:
-      # Production-related environment variables
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
