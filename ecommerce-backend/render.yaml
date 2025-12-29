@@ -2,15 +2,16 @@ services:
   - type: web
     name: ecommerce-backend
     env: node
-    buildCommand: 'npm install'
-    startCommand: 'npm run start'
+    buildCommand: 'cd ecommerce-backend && npm install'
+    startCommand: 'cd ecommerce-backend && npm run start'
     envVars:
       - key: NODE_ENV
         value: production
     plan: free
     healthCheckPath: /health
     branch: master
-    directory: ecommerce-backend
+
+
 
 # services:
 #   - type: web
