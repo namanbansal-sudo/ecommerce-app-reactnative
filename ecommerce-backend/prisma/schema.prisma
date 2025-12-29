@@ -276,6 +276,36 @@ model Address {
   @@map("addresses")
 }
 
+model DashboardOffer {
+  id            Int      @id @default(autoincrement())
+  title         String
+  subtitle      String?
+  description   String?
+  discountLabel String?  @map("discount_label")
+  actionLabel   String?  @map("action_label")
+  targetUrl     String?  @map("target_url")
+  imageUrl      String?  @map("image_url")
+  isActive      Boolean  @default(true) @map("is_active")
+  displayOrder  Int?     @map("display_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("dashboard_offers")
+}
+
+model DashboardBrand {
+  id           Int      @id @default(autoincrement())
+  name         String
+  tagline      String?
+  logoUrl      String?  @map("logo_url")
+  isFeatured   Boolean  @default(false) @map("is_featured")
+  displayOrder Int?     @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("dashboard_brands")
+}
+
 enum OrderStatus {
   PENDING
   CONFIRMED
@@ -297,34 +327,4 @@ enum OrderRating {
   BAD
   GOOD
   VERY_GOOD
-}
-
-model DashboardOffer {
-  id           Int      @id @default(autoincrement())
-  title        String
-  subtitle     String?
-  description  String?
-  discountLabel String? @map("discount_label")
-  actionLabel  String?  @map("action_label")
-  targetUrl    String?  @map("target_url")
-  imageUrl     String?  @map("image_url")
-  isActive     Boolean  @default(true) @map("is_active")
-  displayOrder Int?     @map("display_order")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-
-  @@map("dashboard_offers")
-}
-
-model DashboardBrand {
-  id           Int                     @id @default(autoincrement())
-  name         String
-  tagline      String?
-  logoUrl      String?                 @map("logo_url")
-  isFeatured   Boolean                 @default(false) @map("is_featured")
-  displayOrder Int?                    @map("display_order")
-  createdAt    DateTime                @default(now()) @map("created_at")
-  updatedAt    DateTime                @updatedAt @map("updated_at")
-
-  @@map("dashboard_brands")
 }
