@@ -4,7 +4,7 @@ services:
     env: node
     plan: starter
     region: oregon
-    branch: main
+    branch: master
     buildCommand: npm install  # Or npm run build if applicable
     startCommand: npm run start
     envVars:
