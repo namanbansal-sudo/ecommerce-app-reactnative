@@ -81,21 +81,22 @@ model WishlistItem {
 }
 
 model Category {
-  id                Int        @id @default(autoincrement())
-  parentCategoryId  Int?       @map("parent_category_id")
+  id                Int           @id @default(autoincrement())
+  parentCategoryId  Int?          @map("parent_category_id")
   name              String
   categoryUniqueKey String
   description       String?
   image             String?
   svg               String?
-  displayOrder      Int?       @default(0) @map("display_order")
-  isFeatured        Boolean    @default(false) @map("is_featured")
-  isActive          Boolean    @default(true) @map("is_active")
-  createdAt         DateTime   @default(now()) @map("created_at")
-  updatedAt         DateTime   @updatedAt @map("updated_at")
+  displayOrder      Int?          @default(0) @map("display_order")
+  isFeatured        Boolean       @default(false) @map("is_featured")
+  isActive          Boolean       @default(true) @map("is_active")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
   products          Product[]
-  parentCategory    Category?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id])
-  children          Category[] @relation("CategoryHierarchy")
+  subcategories     Subcategory[]
+  parentCategory    Category?     @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id])
+  children          Category[]    @relation("CategoryHierarchy")
 
   @@map("categories")
 }
@@ -111,7 +112,7 @@ model Product {
   updatedAt                DateTime                @updatedAt @map("updated_at")
   orderItems               OrderItem[]
   category                 Category?               @relation(fields: [categoryId], references: [id])
-  subcategory              Subcategory?            @relation("ProductToSubcategory", fields: [subcategoryId], references: [id])
+  subcategory              Subcategory?            @relation(fields: [subcategoryId], references: [id])
   subcategoryProductType   SubcategoryProductType? @relation("ProductToSubcategoryProductType", fields: [subcategoryProductTypeId], references: [id])
   productVariants          ProductVariant[]
   wishlistItems            WishlistItem[]
@@ -149,8 +150,11 @@ model Subcategory {
   categoryId           Int                      @map("category_id")
   createdAt            DateTime                 @default(now()) @map("created_at")
   updatedAt            DateTime                 @updatedAt @map("updated_at")
-  products             Product[]                @relation("ProductToSubcategory")
+  products             Product[]
+  category             Category                 @relation(fields: [categoryId], references: [id])
   productTypes         SubcategoryProductType[]
+
+  @@map("Subcategory")
 }
 
 model SubcategoryProductType {
