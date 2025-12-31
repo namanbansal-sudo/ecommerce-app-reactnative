@@ -42,12 +42,14 @@ const normalizeSubcategoryKeyForComparison = (value) => {
 const ensureUniqueSubcategoryKey = async (subcategoryUniqueKey, { excludeId } = {}) => {
   const normalizedKey = normalizeSubcategoryKeyForComparison(subcategoryUniqueKey);
   if (!normalizedKey) return;
-  const subcategories = await SubcategoryModel.findAll({
-    select: {
-      id: true,
-      subcategoryUniqueKey: true,
-    },
-  });
+  // const subcategories = await SubcategoryModel.findAll({
+  //   select: {
+  //     id: true,
+  //     subcategoryUniqueKey: true,
+  //   },
+  // });
+  const subcategories = await SubcategoryModel.findAll({});
+
   const conflict = subcategories.find((subcategory) => {
     if (excludeId && subcategory.id === excludeId) {
       return false;
