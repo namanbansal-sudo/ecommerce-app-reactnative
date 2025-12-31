@@ -1,6 +1,7 @@
 import { prisma } from '../../config/db.js';
 import { SubcategoryProductTypeModel } from './subcategoryProductTypes.model.js';
 import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT } from '../../utils/constants.js';
+import { normalizeText } from '../../utils/text.util.js';
 
 const toIntValue = (value) => {
   const parsed = Number(value);
@@ -65,6 +66,36 @@ const buildPagination = (total, page, limit) => {
   };
 };
 
+const normalizeProductTypeKeyForComparison = (value) => {
+  const normalized = normalizeText(value);
+  if (!normalized) return undefined;
+  return normalized.toLowerCase();
+};
+
+const ensureUniqueProductTypeKey = async (uniqueKey, { excludeId } = {}) => {
+  const normalizedKey = normalizeProductTypeKeyForComparison(uniqueKey);
+  if (!normalizedKey) return;
+  const productTypes = await SubcategoryProductTypeModel.findAll({
+    select: {
+      id: true,
+      subcategoryProductTypeUniqueKey: true,
+    },
+  });
+  const conflict = productTypes.find((productType) => {
+    if (excludeId && productType.id === excludeId) {
+      return false;
+    }
+    const existingKey = normalizeProductTypeKeyForComparison(productType.subcategoryProductTypeUniqueKey);
+    return existingKey === normalizedKey;
+  });
+  if (conflict) {
+    const err = new Error('Product type key already exists');
+    err.name = 'ConflictError';
+    err.status = 409;
+    throw err;
+  }
+};
+
 const fetchProductCountsByProductType = async (productTypeIds) => {
   if (!Array.isArray(productTypeIds) || productTypeIds.length === 0) {
     return new Map();
@@ -96,12 +127,12 @@ const fetchProductTypes = async (where = {}, options = {}) => {
   const { page: normalizedPage, limit: normalizedLimit } = normalizePagination(options);
   const total = await SubcategoryProductTypeModel.count({ where });
 
-  const productTypes = await SubcategoryProductTypeModel.findAll({
+  const productTypes = (await SubcategoryProductTypeModel.findAll({
     where,
     orderBy: [{ displayOrder: 'asc' }, { createdAt: 'desc' }],
     take: normalizedLimit,
     skip: (normalizedPage - 1) * normalizedLimit,
-  });
+  })) ?? [];
 
   const decorated = await attachProductCounts(productTypes);
   return {
@@ -124,10 +155,12 @@ export const SubcategoryProductTypeService = {
   },
 
   async createProductType(data) {
+    await ensureUniqueProductTypeKey(data.subcategoryProductTypeUniqueKey);
     return SubcategoryProductTypeModel.create({
       data: {
         name: data.name,
         slug: data.slug,
+        subcategoryProductTypeUniqueKey: data.subcategoryProductTypeUniqueKey,
         description: data.description || null,
         image: data.image || null,
         filters: parseFilters(data.filters) ?? null,
@@ -140,6 +173,10 @@ export const SubcategoryProductTypeService = {
 
   async updateProductType(id, payload) {
     const updateData = {};
+    if (payload.subcategoryProductTypeUniqueKey !== undefined) {
+      await ensureUniqueProductTypeKey(payload.subcategoryProductTypeUniqueKey, { excludeId: id });
+      updateData.subcategoryProductTypeUniqueKey = payload.subcategoryProductTypeUniqueKey;
+    }
     if (payload.name !== undefined) updateData.name = payload.name;
     if (payload.slug !== undefined) updateData.slug = payload.slug;
     if (payload.description !== undefined) updateData.description = payload.description;

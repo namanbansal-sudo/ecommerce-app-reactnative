@@ -10,6 +10,7 @@ export const subcategoryIdParamSchema = Joi.object({
 
 export const productTypeCreateSchema = Joi.object({
   name: Joi.string().max(255).required(),
+  subcategoryProductTypeUniqueKey: Joi.string().max(255).required(),
   slug: Joi.string().max(255).required(),
   description: Joi.string().max(2000).allow(null, '').optional(),
   image: Joi.string().uri().max(2000).optional(),
@@ -20,6 +21,7 @@ export const productTypeCreateSchema = Joi.object({
 });
 
 export const productTypeUpdateSchema = Joi.object({
+  subcategoryProductTypeUniqueKey: Joi.string().max(255).optional(),
   name: Joi.string().max(255).optional(),
   slug: Joi.string().max(255).optional(),
   description: Joi.string().max(2000).allow(null, '').optional(),

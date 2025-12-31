@@ -51,7 +51,8 @@ const buildVariantCreatePayload = (variant = {}, uploadedImages = {}) => {
     price: variant.price,
     discountedPrice: variant.discountedPrice ?? null,
     stock: variant.stock,
-    color: variant.color,
+    colorCode: variant.colorCode,
+    colorName: variant.colorName,
     size: variant.size,
     rating: variant.rating ?? null,
     reviewCount: variant.reviewCount ?? 0,
@@ -75,7 +76,8 @@ const buildVariantUpdatePayload = (variant = {}, uploadedImages = {}) => {
   if (variant.price !== undefined) data.price = variant.price;
   if (variant.discountedPrice !== undefined) data.discountedPrice = variant.discountedPrice;
   if (variant.stock !== undefined) data.stock = variant.stock;
-  if (variant.color !== undefined) data.color = variant.color;
+  if (variant.colorCode !== undefined) data.colorCode = variant.colorCode;
+  if (variant.colorName !== undefined) data.colorName = variant.colorName;
   if (variant.size !== undefined) data.size = variant.size;
   if (variant.rating !== undefined) data.rating = variant.rating;
   if (variant.reviewCount !== undefined) data.reviewCount = variant.reviewCount;
@@ -121,6 +123,21 @@ const attachVariantConstraints = (where = {}, filters = {}) => {
     variantClause.stock = { gt: 0 };
   } else if (filters.inStock === false) {
     variantClause.stock = { lte: 0 };
+  }
+
+  if (Array.isArray(filters.colorTerms) && filters.colorTerms.length > 0) {
+    const colorClauses = filters.colorTerms.flatMap((term) => [
+      { colorCode: { contains: term, mode: 'insensitive' } },
+      { colorName: { contains: term, mode: 'insensitive' } },
+    ]);
+    variantClause.AND = [...(variantClause.AND ?? []), { OR: colorClauses }];
+  }
+
+  if (Array.isArray(filters.sizeTerms) && filters.sizeTerms.length > 0) {
+    const sizeClauses = filters.sizeTerms.map((term) => ({
+      size: { contains: term, mode: 'insensitive' },
+    }));
+    variantClause.AND = [...(variantClause.AND ?? []), { OR: sizeClauses }];
   }
 
   const nextWhere = {

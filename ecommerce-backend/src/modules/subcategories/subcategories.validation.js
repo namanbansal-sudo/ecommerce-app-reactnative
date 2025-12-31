@@ -16,6 +16,7 @@ export const paginationQuerySchema = Joi.object({
 
 export const subcategoryCreateSchema = Joi.object({
   name: Joi.string().max(255).required(),
+  subcategoryUniqueKey: Joi.string().max(255).required(),
   description: Joi.string().max(2000).allow(null, '').optional(),
   categoryId: Joi.number().integer().positive().required(),
   image: Joi.string().uri().max(2000).optional(),
@@ -24,6 +25,7 @@ export const subcategoryCreateSchema = Joi.object({
 });
 
 export const subcategoryUpdateSchema = Joi.object({
+  subcategoryUniqueKey: Joi.string().max(255).optional(),
   name: Joi.string().max(255).optional(),
   description: Joi.string().max(2000).allow(null, '').optional(),
   categoryId: Joi.number().integer().positive().optional(),

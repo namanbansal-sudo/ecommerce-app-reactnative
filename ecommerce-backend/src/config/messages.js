@@ -14,6 +14,7 @@ export const MESSAGES = {
   FETCHED: 'Data fetched successfully',
   NO_WISHLISTS_FOUND: 'No wishlists found for this user.',
   WISHLIST_CREATED: 'Wishlist created successfully.',
+  WISHLIST_NAME_EXISTS: 'Wishlist name already exists',
   WISHLIST_UPDATED: 'Wishlist updated successfully.',
   WISHLIST_ITEM_ADDED: 'Item added to wishlist successfully.',
   WISHLIST_ITEM_REMOVED: 'Item removed from wishlist successfully.',

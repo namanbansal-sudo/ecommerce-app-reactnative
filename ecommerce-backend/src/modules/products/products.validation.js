@@ -14,7 +14,8 @@ const variantPayloadSchema = Joi.object({
   price: Joi.number().positive().precision(2).required(),
   discountedPrice: Joi.number().positive().precision(2).optional().allow(null),
   stock: Joi.number().integer().min(0).required(),
-  color: Joi.string().max(100).required(),
+  colorCode: Joi.string().max(100).required(),
+  colorName: Joi.string().max(100).required(),
   size: Joi.string().max(100).required(),
   rating: Joi.number().min(0).max(5).precision(2).optional().allow(null),
   reviewCount: Joi.number().integer().min(0).optional().default(0),
@@ -30,10 +31,10 @@ export const categoryIdParamSchema = Joi.object({
 
 export const productCreateSchema = Joi.object({
   name: Joi.string().max(255).required(),
-  description: Joi.string().max(2000).allow(null, '').optional(),
-  categoryId: Joi.number().integer().positive().optional().allow(null),
-  subcategoryId: Joi.number().integer().positive().optional().allow(null),
-  subcategoryProductTypeId: Joi.number().integer().positive().optional().allow(null),
+  description: Joi.string().max(2000).required(),
+  categoryId: Joi.number().integer().positive().required(),
+  subcategoryId: Joi.number().integer().positive().required(),
+  subcategoryProductTypeId: Joi.number().integer().positive().required(),
   variants: Joi.array()
     .items(
       variantPayloadSchema,
@@ -42,12 +43,9 @@ export const productCreateSchema = Joi.object({
     .required(),
 });
 
-export const productVariantCreateSchema = Joi.alternatives().try(
-  variantPayloadSchema,
-  Joi.object({
-    variants: Joi.array().items(variantPayloadSchema).min(1).required(),
-  }),
-);
+export const productVariantCreateSchema = Joi.object({
+  variants: Joi.array().items(variantPayloadSchema).min(1).required(),
+}).required();
 
 export const subcategoryIdParamSchema = Joi.object({
   subcategoryId: Joi.number().integer().positive().required(),
@@ -73,7 +71,8 @@ const variantUpdateBodySchema = Joi.object({
   price: Joi.number().positive().precision(2).optional(),
   discountedPrice: Joi.number().positive().precision(2).optional().allow(null),
   stock: Joi.number().integer().min(0).optional(),
-  color: Joi.string().max(100).optional(),
+  colorCode: Joi.string().max(100).optional(),
+  colorName: Joi.string().max(100).optional(),
   size: Joi.string().max(100).optional(),
   rating: Joi.number().min(0).max(5).precision(2).optional().allow(null),
   reviewCount: Joi.number().integer().min(0).optional(),
@@ -89,7 +88,8 @@ const variantUpdateBodySchema = Joi.object({
   'price',
   'discountedPrice',
   'stock',
-  'color',
+  'colorCode',
+  'colorName',
   'size',
   'images',
   'rating',

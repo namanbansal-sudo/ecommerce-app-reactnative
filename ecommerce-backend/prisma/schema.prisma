@@ -63,6 +63,9 @@ model Wishlist {
   updated_at     DateTime       @updatedAt
   user           User           @relation(fields: [user_id], references: [id])
   wishlist_items WishlistItem[]
+
+  @@unique([user_id, name])
+  @@map("wishlists")
 }
 
 model WishlistItem {
@@ -122,7 +125,8 @@ model ProductVariant {
   price           Decimal  @db.Decimal(10, 2)
   discountedPrice Decimal? @db.Decimal(10, 2)
   stock           Int
-  color           String
+  colorCode       String   @map("color_code")
+  colorName       String   @map("color_name")
   size            String
   rating          Decimal? @db.Decimal(3, 2)
   reviewCount     Int
@@ -137,6 +141,7 @@ model ProductVariant {
 model Subcategory {
   id           Int                      @id @default(autoincrement())
   name         String
+  subcategoryUniqueKey String           @unique @map("subcategory_unique_key")
   description  String?
   image        String?
   displayOrder Int?                     @map("display_order")
@@ -151,6 +156,7 @@ model Subcategory {
 model SubcategoryProductType {
   id            Int         @id @default(autoincrement())
   name          String
+  subcategoryProductTypeUniqueKey String @unique @map("subcategory_product_type_unique_key")
   slug          String      @unique
   description   String?
   image         String?
@@ -276,36 +282,6 @@ model Address {
   @@map("addresses")
 }
 
-model DashboardOffer {
-  id            Int      @id @default(autoincrement())
-  title         String
-  subtitle      String?
-  description   String?
-  discountLabel String?  @map("discount_label")
-  actionLabel   String?  @map("action_label")
-  targetUrl     String?  @map("target_url")
-  imageUrl      String?  @map("image_url")
-  isActive      Boolean  @default(true) @map("is_active")
-  displayOrder  Int?     @map("display_order")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-
-  @@map("dashboard_offers")
-}
-
-model DashboardBrand {
-  id           Int      @id @default(autoincrement())
-  name         String
-  tagline      String?
-  logoUrl      String?  @map("logo_url")
-  isFeatured   Boolean  @default(false) @map("is_featured")
-  displayOrder Int?     @map("display_order")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-
-  @@map("dashboard_brands")
-}
-
 enum OrderStatus {
   PENDING
   CONFIRMED
@@ -327,4 +303,34 @@ enum OrderRating {
   BAD
   GOOD
   VERY_GOOD
+}
+
+model DashboardOffer {
+  id           Int      @id @default(autoincrement())
+  title        String
+  subtitle     String?
+  description  String?
+  discountLabel String? @map("discount_label")
+  actionLabel  String?  @map("action_label")
+  targetUrl    String?  @map("target_url")
+  imageUrl     String?  @map("image_url")
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int?     @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("dashboard_offers")
+}
+
+model DashboardBrand {
+  id           Int                     @id @default(autoincrement())
+  name         String
+  tagline      String?
+  logoUrl      String?                 @map("logo_url")
+  isFeatured   Boolean                 @default(false) @map("is_featured")
+  displayOrder Int?                    @map("display_order")
+  createdAt    DateTime                @default(now()) @map("created_at")
+  updatedAt    DateTime                @updatedAt @map("updated_at")
+
+  @@map("dashboard_brands")
 }

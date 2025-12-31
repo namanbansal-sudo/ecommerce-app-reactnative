@@ -1,6 +1,7 @@
 import { prisma } from '../../config/db.js';
 import { SubcategoryModel } from './subcategories.model.js';
 import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT } from '../../utils/constants.js';
+import { normalizeText } from '../../utils/text.util.js';
 
 const parsePositiveInt = (value, fallback) => {
   const parsed = Number(value);
@@ -30,6 +31,36 @@ const buildPagination = (total, page, limit) => {
     hasNextPage: page < totalPages,
     hasPrevPage: page > 1,
   };
+};
+
+const normalizeSubcategoryKeyForComparison = (value) => {
+  const normalized = normalizeText(value);
+  if (!normalized) return undefined;
+  return normalized.toLowerCase();
+};
+
+const ensureUniqueSubcategoryKey = async (subcategoryUniqueKey, { excludeId } = {}) => {
+  const normalizedKey = normalizeSubcategoryKeyForComparison(subcategoryUniqueKey);
+  if (!normalizedKey) return;
+  const subcategories = await SubcategoryModel.findAll({
+    select: {
+      id: true,
+      subcategoryUniqueKey: true,
+    },
+  });
+  const conflict = subcategories.find((subcategory) => {
+    if (excludeId && subcategory.id === excludeId) {
+      return false;
+    }
+    const existingKey = normalizeSubcategoryKeyForComparison(subcategory.subcategoryUniqueKey);
+    return existingKey === normalizedKey;
+  });
+  if (conflict) {
+    const err = new Error('Subcategory key already exists');
+    err.name = 'ConflictError';
+    err.status = 409;
+    throw err;
+  }
 };
 
 const fetchProductTypeCountsBySubcategory = async (subcategoryIds, includeInactive = false) => {
@@ -76,7 +107,7 @@ const fetchSubcategories = async (where = {}, { page, limit, includeInactive = f
 
   query.skip = (normalizedPage - 1) * normalizedLimit;
 
-  const subcategories = await SubcategoryModel.findAll(query);
+  const subcategories = (await SubcategoryModel.findAll(query)) ?? [];
   const decorated = await attachProductTypeCounts(subcategories, includeInactive);
   return { subcategories: decorated, pagination: buildPagination(total, normalizedPage, normalizedLimit) };
 };
@@ -142,9 +173,11 @@ export const SubcategoryService = {
   },
 
   async createSubcategory(data) {
+    await ensureUniqueSubcategoryKey(data.subcategoryUniqueKey);
     return SubcategoryModel.create({
       data: {
         name: data.name,
+        subcategoryUniqueKey: data.subcategoryUniqueKey,
         description: data.description || null,
         image: data.image || null,
         displayOrder: toNullableInt(data.displayOrder),
@@ -156,6 +189,10 @@ export const SubcategoryService = {
 
   async updateSubcategory(id, payload) {
     const updateData = {};
+    if (payload.subcategoryUniqueKey !== undefined) {
+      await ensureUniqueSubcategoryKey(payload.subcategoryUniqueKey, { excludeId: id });
+      updateData.subcategoryUniqueKey = payload.subcategoryUniqueKey;
+    }
     if (payload.name !== undefined) updateData.name = payload.name;
     if (payload.description !== undefined) updateData.description = payload.description;
     if (payload.image !== undefined) updateData.image = payload.image || null;

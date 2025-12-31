@@ -3,6 +3,7 @@ import { MESSAGES } from '../../config/messages.js';
 import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT } from '../../utils/constants.js';
 import { ProductModel } from '../products/products.model.js';
 import { WishlistModel } from './wishlist.model.js';
+import { normalizeNameForComparison } from '../../utils/text.util.js';
 
 const createError = (message, name = 'Error', status = 400) => {
   const err = new Error(message);
@@ -11,8 +12,46 @@ const createError = (message, name = 'Error', status = 400) => {
   return err;
 };
 
+const DEFAULT_WISHLIST_NAME = 'my wishlist';
+
+const ensureDefaultWishlistExists = async (userId, client = prisma) => {
+  const existingCount = await client.wishlist.count({ where: { user_id: userId } });
+  if (existingCount > 0) {
+    return;
+  }
+  await client.wishlist.create({
+    data: {
+      user_id: userId,
+      name: DEFAULT_WISHLIST_NAME,
+      is_default: true,
+    },
+  });
+};
+
+const ensureUniqueWishlistName = async (userId, name, { excludeId, client = prisma } = {}) => {
+  const normalizedName = normalizeNameForComparison(name);
+  if (!normalizedName) {
+    return;
+  }
+  const wishlists = (await client.wishlist.findMany({
+    where: { user_id: userId },
+    select: { id: true, name: true },
+  })) ?? [];
+  const conflict = wishlists.find((wishlist) => {
+    if (excludeId && wishlist.id === excludeId) {
+      return false;
+    }
+    const existingName = normalizeNameForComparison(wishlist.name);
+    return existingName === normalizedName;
+  });
+  if (conflict) {
+    throw createError(MESSAGES.WISHLIST_NAME_EXISTS, 'WishlistError', 409);
+  }
+};
+
 const WishlistService = {
   async getWishlists(userId, page = DEFAULT_PAGE, limit = DEFAULT_LIMIT) {
+    await ensureDefaultWishlistExists(userId);
     const { wishlists, total } = await prisma.$transaction(async (tx) => {
       const wishlistsResult = await WishlistModel.findByUserId(
         userId,
@@ -51,6 +90,8 @@ const WishlistService = {
 
   async createWishlist(userId, name, isDefault = false) {
     return prisma.$transaction(async (tx) => {
+      await ensureDefaultWishlistExists(userId, tx);
+      await ensureUniqueWishlistName(userId, name, { client: tx });
       if (isDefault) {
         await tx.wishlist.updateMany({
           where: { user_id: userId, is_default: true },
@@ -77,6 +118,8 @@ const WishlistService = {
     if (!existing) {
       throw createError(MESSAGES.WISHLIST_NOT_FOUND, 'WishlistError', 404);
     }
+
+    await ensureUniqueWishlistName(userId, name, { excludeId: wishlistId });
 
     return prisma.$transaction(async (tx) => {
       if (is_default === true) {

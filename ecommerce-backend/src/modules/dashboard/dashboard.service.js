@@ -1,6 +1,7 @@
 import { prisma } from '../../config/db.js';
-import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT } from '../../utils/constants.js';
 import { uploadOnCloudinary as uploadToCloudinary } from '../../utils/cloudinary.js';
+import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT } from '../../utils/constants.js';
+import { CategoryService } from '../categories/categories.service.js';
 import { ProductService } from '../products/products.service.js';
 
 const parsePositiveInt = (value, fallback) => {
@@ -149,26 +150,20 @@ const fetchOffers = async (options) => {
 };
 
 const fetchFeaturedCategories = async (options) => {
-  const where = {
-    isFeatured: true,
-    isActive: true,
-  };
-  const total = await prisma.category.count({ where });
-  const categories = await prisma.category.findMany({
-    where,
-    orderBy: [{ displayOrder: 'asc' }, { createdAt: 'desc' }],
-    ...buildPaginationArgs(options),
+  const { categories, pagination } = await CategoryService.listCategories({
+    page: options.page,
+    limit: options.limit,
   });
   const items = categories.map((category) => ({
     id: category.id,
     name: category.name,
     description: category.description,
     image: category.image,
-    isActive: category.isActive,
-    categoryUniqueKey: category.categoryUniqueKey,
+    svg: category.svg,
     displayOrder: category.displayOrder ?? 0,
+    subcategoryCount: category.subcategoryCount,
   }));
-  return buildSectionPayload(items, buildPagination(total, options.page, options.limit));
+  return buildSectionPayload(items, pagination);
 };
 
 const fetchPreviousOrders = async (userId, options) => {

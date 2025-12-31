@@ -12,6 +12,103 @@ const SECTION_OPTION_PREFIX = {
 };
 
 const PRICE_MATCH = /(₹|rs\.?\s*)?(\d+(?:\.\d+)?)(\s*[kKmM])?/g;
+const PRICE_MIN_HINTS = /\b(over|above|greater than|from|at least|minimum|more than|starting at)\b/;
+const PRICE_MAX_HINTS = /\b(under|below|less than|up to|upto|within|no more than|max)\b/;
+const COLOR_KEYWORDS = new Set([
+  'black',
+  'white',
+  'red',
+  'blue',
+  'green',
+  'grey',
+  'gray',
+  'yellow',
+  'orange',
+  'purple',
+  'pink',
+  'brown',
+  'navy',
+  'maroon',
+  'teal',
+  'olive',
+  'beige',
+  'peach',
+  'mint',
+  'lavender',
+  'coral',
+  'turquoise',
+  'magenta',
+  'amber',
+  'gold',
+  'silver',
+  'bronze',
+  'cream',
+  'ivory',
+  'chocolate',
+  'charcoal',
+  'rose',
+  'mustard',
+  'eggplant',
+  'emerald',
+  'ruby',
+  'wine',
+  'lime',
+  'aqua',
+  'cyan',
+]);
+const SIZE_DIRECT_TERMS = new Set([
+  'xs',
+  's',
+  'm',
+  'l',
+  'xl',
+  'xxl',
+  'xxxl',
+  'small',
+  'medium',
+  'large',
+  'onesize',
+  'one-size',
+  'os',
+]);
+const SIZE_INDICATOR_WORDS = new Set([
+  'size',
+  'shoe',
+  'shoes',
+  'footwear',
+  'clothes',
+  'apparel',
+  'pant',
+  'pants',
+  'trouser',
+  'trousers',
+  'shirt',
+  'shirts',
+  'tshirt',
+  'dress',
+  'sneaker',
+  'sneakers',
+  'boots',
+  'boot',
+  'jacket',
+  'jeans',
+  'shorts',
+  'skirt',
+  'sweater',
+  'sock',
+  'socks',
+  'sandals',
+  'slipper',
+  'slippers',
+  'heels',
+  'coat',
+  'coats',
+  'top',
+  'tops',
+  'outerwear',
+  'hoodie',
+]);
+const NUMBER_PATTERN = /^\d+(?:\.\d+)?$/;
 
 const parsePositiveInt = (value, fallback) => {
   const parsed = Number(value);
@@ -109,19 +206,55 @@ const extractPriceRangeFromQuery = (text = '') => {
     return { sanitized: text, min: undefined, max: undefined };
   }
   const matches = [...text.matchAll(PRICE_MATCH)].map((match) => parseHumanPrice(match[0]));
+  const normalizedText = text.toLowerCase();
+  const hasMaxHint = PRICE_MAX_HINTS.test(normalizedText);
+  const hasMinHint = PRICE_MIN_HINTS.test(normalizedText);
+
+  const values = matches.filter((value) => Number.isFinite(value));
   let min;
   let max;
-  if (matches.length >= 1) {
-    min = matches[0];
+  if (values.length >= 2) {
+    min = Math.min(values[0], values[1]);
+    max = Math.max(values[0], values[1]);
+  } else if (values.length === 1) {
+    if (hasMaxHint && !hasMinHint) {
+      max = values[0];
+    } else {
+      min = values[0];
+    }
   }
-  if (matches.length >= 2) {
-    max = matches[1];
-  }
+
   let sanitized = text;
   if (matches.length > 0) {
     sanitized = text.replace(PRICE_MATCH, '').replace(/\s+/g, ' ').trim();
   }
   return { sanitized, min, max };
+};
+
+const extractAttributeFilters = (raw = '') => {
+  if (typeof raw !== 'string' || !raw.trim()) {
+    return { colorTerms: [], sizeTerms: [] };
+  }
+  const normalized = raw.toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+  const tokens = normalized.split(/\s+/).filter(Boolean);
+  const hasSizeIndicator = tokens.some((token) => SIZE_INDICATOR_WORDS.has(token));
+  const colors = new Set();
+  const sizes = new Set();
+  for (const token of tokens) {
+    if (COLOR_KEYWORDS.has(token)) {
+      colors.add(token);
+    }
+    if (SIZE_DIRECT_TERMS.has(token)) {
+      sizes.add(token);
+    }
+    if (NUMBER_PATTERN.test(token) && hasSizeIndicator) {
+      sizes.add(token);
+    }
+  }
+  return {
+    colorTerms: Array.from(colors),
+    sizeTerms: Array.from(sizes),
+  };
 };
 
 const extractSearchTerm = (query = {}) => {
@@ -156,6 +289,8 @@ export const SearchService = {
       throw err;
     }
 
+    const attributeFilters = extractAttributeFilters(searchTerm);
+
     const includeInactive = parseBoolean(query.includeInactive) ?? false;
     const categoryId = parseIntOrUndefined(query.categoryId);
     const subcategoryId = parseIntOrUndefined(query.subcategoryId);
@@ -189,6 +324,8 @@ export const SearchService = {
               priceMax: resolvedMaxPrice,
               minRating,
               inStock,
+              colorTerms: attributeFilters.colorTerms,
+              sizeTerms: attributeFilters.sizeTerms,
             },
             pagination,
           );
@@ -218,4 +355,3 @@ export const SearchService = {
     };
   },
 };
-
