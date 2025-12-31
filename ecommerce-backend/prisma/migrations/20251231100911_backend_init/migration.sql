@@ -1,6 +1,3 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
-
 -- CreateEnum
 CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED');
 
@@ -57,7 +54,7 @@ CREATE TABLE "RefreshToken" (
 );
 
 -- CreateTable
-CREATE TABLE "Wishlist" (
+CREATE TABLE "wishlists" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
@@ -65,7 +62,7 @@ CREATE TABLE "Wishlist" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Wishlist_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "wishlists_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -87,6 +84,7 @@ CREATE TABLE "categories" (
     "categoryUniqueKey" TEXT NOT NULL,
     "description" TEXT,
     "image" TEXT,
+    "svg" TEXT,
     "display_order" INTEGER DEFAULT 0,
     "is_featured" BOOLEAN NOT NULL DEFAULT false,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
@@ -118,7 +116,8 @@ CREATE TABLE "ProductVariant" (
     "price" DECIMAL(10,2) NOT NULL,
     "discountedPrice" DECIMAL(10,2),
     "stock" INTEGER NOT NULL,
-    "color" TEXT NOT NULL,
+    "color_code" TEXT NOT NULL,
+    "color_name" TEXT NOT NULL,
     "size" TEXT NOT NULL,
     "rating" DECIMAL(3,2),
     "reviewCount" INTEGER NOT NULL,
@@ -134,6 +133,7 @@ CREATE TABLE "ProductVariant" (
 CREATE TABLE "Subcategory" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "subcategory_unique_key" TEXT NOT NULL,
     "description" TEXT,
     "image" TEXT,
     "display_order" INTEGER,
@@ -149,6 +149,7 @@ CREATE TABLE "Subcategory" (
 CREATE TABLE "SubcategoryProductType" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "subcategory_product_type_unique_key" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "description" TEXT,
     "image" TEXT,
@@ -306,10 +307,19 @@ CREATE UNIQUE INDEX "User_stripeCustomerId_key" ON "User"("stripeCustomerId");
 CREATE UNIQUE INDEX "RefreshToken_token_key" ON "RefreshToken"("token");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "wishlists_user_id_name_key" ON "wishlists"("user_id", "name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "WishlistItem_wishlist_id_product_id_key" ON "WishlistItem"("wishlist_id", "product_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ProductVariant_sku_key" ON "ProductVariant"("sku");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Subcategory_subcategory_unique_key_key" ON "Subcategory"("subcategory_unique_key");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "SubcategoryProductType_subcategory_product_type_unique_key_key" ON "SubcategoryProductType"("subcategory_product_type_unique_key");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "SubcategoryProductType_slug_key" ON "SubcategoryProductType"("slug");
@@ -345,13 +355,13 @@ ALTER TABLE "NeedHelpRequest" ADD CONSTRAINT "NeedHelpRequest_userId_fkey" FOREI
 ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Wishlist" ADD CONSTRAINT "Wishlist_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "wishlists" ADD CONSTRAINT "wishlists_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "WishlistItem" ADD CONSTRAINT "WishlistItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WishlistItem" ADD CONSTRAINT "WishlistItem_wishlist_id_fkey" FOREIGN KEY ("wishlist_id") REFERENCES "Wishlist"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "WishlistItem" ADD CONSTRAINT "WishlistItem_wishlist_id_fkey" FOREIGN KEY ("wishlist_id") REFERENCES "wishlists"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "categories" ADD CONSTRAINT "categories_parent_category_id_fkey" FOREIGN KEY ("parent_category_id") REFERENCES "categories"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -403,4 +413,3 @@ ALTER TABLE "payments" ADD CONSTRAINT "payments_userId_fkey" FOREIGN KEY ("userI
 
 -- AddForeignKey
 ALTER TABLE "addresses" ADD CONSTRAINT "addresses_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
